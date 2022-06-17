@@ -1,0 +1,41 @@
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 45 23 * * *
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout self
+        uses: actions/checkout@v3
+      - id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d')"
+      - name: checkout luckysheet
+        uses: actions/checkout@v3
+        with:
+          repository: mengshukeji/Luckysheet
+          path: luckysheet
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      - run: yarn --cwd luckysheet/
+      - run: yarn --cwd luckysheet/ run build
+      - name: collect deliverables
+        run: |
+          rm -rf dist/
+          mv luckysheet/dist/ .
+          mv luckysheet/LICENSE .
+          node package.json.js
+      - name: check changes
+        run: echo "::set-output name=count::$(git status --porcelain | wc -l)"
+        id: changes
+      - name: push
+        if: steps.changes.outputs.count > 0
+        run: |
+          git config --global user.name "luncheon"
+          git config --global user.email "takeuck+github@gmail.com"
+          git add .
+          git commit -m "${{ steps.date.outputs.date }}"
+          git tag -f "${{ steps.date.outputs.date }}"
+          git push --tags origin main
