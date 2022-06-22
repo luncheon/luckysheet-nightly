@@ -16,14 +16,20 @@ jobs:
         with:
           repository: mengshukeji/Luckysheet
           path: luckysheet
+      - name: checkout luckysheet-locale-ja
+        uses: actions/checkout@v3
+        with:
+          repository: luncheon/luckysheet-locale-ja
+          path: luckysheet-locale-ja
       - uses: actions/setup-node@v3
         with:
           node-version: '18.x'
       - run: yarn --cwd luckysheet/
       - run: yarn --cwd luckysheet/ run build
+      - run: rm -rf dist/
+      - run: node build-without-locales.js
       - name: collect deliverables
         run: |
-          rm -rf dist/
           mv luckysheet/dist/ .
           mv luckysheet/LICENSE .
       - name: check changes
