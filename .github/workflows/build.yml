@@ -23,15 +23,15 @@ jobs:
           path: luckysheet-locale-ja
       - uses: actions/setup-node@v3
         with:
-          node-version: '18.x'
+          node-version: 18
       - run: yarn --cwd luckysheet/
       - run: yarn --cwd luckysheet/ run build
       - run: rm -rf dist/
-      - run: node build-without-locales.js
       - name: collect deliverables
         run: |
           mv luckysheet/dist/ .
           mv luckysheet/LICENSE .
+      - run: node build-without-locales.mjs
       - name: check changes
         run: echo "::set-output name=count::$(git status --porcelain | wc -l)"
         id: changes
