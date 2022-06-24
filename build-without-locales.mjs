@@ -36,6 +36,25 @@ const replaceLocalePlugin = {
   },
 };
 
+/** @type esbuild.Plugin */
+const replaceConfigPlugin = {
+  name: "replace-config",
+  setup(build) {
+    const namespace = "replace-config";
+    build.onResolve({ filter: /\/config\.js$/ }, (args) => ({
+      path: path.resolve(args.resolveDir, args.path),
+      namespace
+    }));
+    build.onLoad({ filter: /.*/, namespace }, (args) => ({
+      loader: "js",
+      contents: fs.readFileSync(args.path, "utf8")
+        .replace(/^(\s*)userMenuItem:.*$/m, "userMenuItem:[],")
+        .replace('www.baidu.com', 'https://github.com/luncheon/luckysheet-nightly'),
+      resolveDir: path.dirname(args.path),
+    }));
+  },
+};
+
 esbuild.build({
   entryPoints: [resolve("luckysheet/src/index.js")],
   outfile: resolve("dist/luckysheet-without-locales.iife.js"),
@@ -45,7 +64,7 @@ esbuild.build({
   minify: true,
   banner: { js: banner },
   target: "es2020",
-  plugins: [replaceLocalePlugin],
+  plugins: [replaceLocalePlugin, replaceConfigPlugin],
 });
 
 // locales
