@@ -45,4 +45,4 @@ jobs:
           git add .
           git commit -m "${{ steps.date.outputs.date }}"
           git tag -f "${{ steps.date.outputs.date }}"
-          git push --tags origin main
+          git push -f --tags origin main
