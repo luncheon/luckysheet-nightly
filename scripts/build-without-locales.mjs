@@ -57,10 +57,17 @@ const replaceConfigPlugin = {
 };
 
 await esbuild.build({
-  entryPoints: [resolve("luckysheet/src/index.js")],
+  stdin: {
+    contents: `
+      import "./dist/plugins/js/plugin.js";
+      import luckysheet from "./src/index.js";
+      export default luckysheet;
+    `,
+    loader: "js",
+    resolveDir: resolve("luckysheet"),
+  },
   outfile: resolve("luckysheet-without-locales.iife.js"),
   inject: [resolve("luckysheet/dist/plugins/js/plugin.js")],
-  external: ["jquery"],
   format: "iife",
   globalName: "luckysheet",
   bundle: true,
