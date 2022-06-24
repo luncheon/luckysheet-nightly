@@ -29,6 +29,7 @@ jobs:
       - run: rm -rf assets/ demo/ locales/
       - run: node scripts/build-without-locales.mjs
       - run: cp -r luckysheet/dist/demoData demo/
+      - run: cp -r luckysheet/dist/expendPlugins demo/
       - run: cp luckysheet/LICENSE .
       - name: check changes
         run: echo "::set-output name=count::$(git status --porcelain | wc -l)"

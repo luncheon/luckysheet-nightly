@@ -56,26 +56,23 @@ const replaceConfigPlugin = {
   },
 };
 
-await esbuild.build({
-  stdin: {
-    contents: `
-      import "./dist/plugins/js/plugin.js";
-      import luckysheet from "./src/index.js";
-      export default luckysheet;
-    `,
-    loader: "js",
-    resolveDir: resolve("luckysheet"),
-  },
-  outfile: resolve("luckysheet-without-locales.iife.js"),
-  inject: [resolve("luckysheet/dist/plugins/js/plugin.js")],
-  format: "iife",
-  globalName: "luckysheet",
-  bundle: true,
-  minify: true,
-  banner: { js: banner },
-  target: "es2020",
-  plugins: [replaceLocalePlugin, replaceConfigPlugin],
-});
+await esbuild
+  .build({
+    entryPoints: [resolve("luckysheet/src/index.js")],
+    inject: [resolve("luckysheet/dist/plugins/js/plugin.js")],
+    format: "iife",
+    globalName: "luckysheet",
+    bundle: true,
+    minify: true,
+    banner: { js: banner },
+    target: "es2020",
+    plugins: [replaceLocalePlugin, replaceConfigPlugin],
+    write: false,
+  })
+  .then(result => {
+    const plugin = fs.readFileSync(resolve("luckysheet/dist/plugins/js/plugin.js"), "utf8");
+    fs.writeFileSync(resolve("luckysheet-without-locales.iife.js"), plugin + result.outputFiles[0].text, "utf8");
+  });
 
 await esbuild.build({
   stdin: {
@@ -112,7 +109,7 @@ const index_html = fs.readFileSync(resolve("luckysheet/dist/index.html"), "utf8"
 const index_html_with_locale = (lang, localeSource) => {
   const html = index_html
     .replace(
-      /<html[\s\S]+<\/head>/m,
+      /<html[\s\S]+?<\/head>/m,
       `
 <html lang="${lang}">
 <head>
@@ -131,7 +128,8 @@ const index_html_with_locale = (lang, localeSource) => {
 \t\tluckysheet.locales.${lang} = locale_${lang};
 `.trim()
     )
-    .replace(/var lang =.+$/m, `var lang = '${lang}';`);
+    .replace(/var lang =.+$/m, `var lang = '${lang}';`)
+    .replace(/fontList:\[[\s\S]+?\],\s*/, "");
   fs.writeFileSync(resolve(`demo/${lang}.html`), html, "utf8");
 
   esbuild.buildSync({
