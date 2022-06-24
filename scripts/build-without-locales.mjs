@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import esbuild from "../luckysheet/node_modules/esbuild/lib/main.js";
-import luckysheetPackage from "../luckysheet/package.json" assert { type: 'json' };
+import luckysheetPackage from "../luckysheet/package.json" assert { type: "json" };
 
 const __dirname = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const resolve = (...pathSegments) => path.join(__dirname, ...pathSegments);
@@ -24,11 +24,11 @@ const replaceLocalePlugin = {
   name: "replace-locale",
   setup(build) {
     const namespace = "replace-locale";
-    build.onResolve({ filter: /\/locale\/locale$/ }, (args) => ({
-      path: path.resolve(args.resolveDir, args.path + ".js"),
+    build.onResolve({ filter: /\/locale\/locale$/ }, args => ({
       namespace,
+      path: path.resolve(args.resolveDir, args.path + ".js"),
     }));
-    build.onLoad({ filter: /.*/, namespace }, (args) => ({
+    build.onLoad({ filter: /.*/, namespace }, args => ({
       loader: "js",
       contents: localeJs,
       resolveDir: path.dirname(args.path),
@@ -41,23 +41,26 @@ const replaceConfigPlugin = {
   name: "replace-config",
   setup(build) {
     const namespace = "replace-config";
-    build.onResolve({ filter: /\/config\.js$/ }, (args) => ({
+    build.onResolve({ filter: /\/config\.js$/ }, args => ({
+      namespace,
       path: path.resolve(args.resolveDir, args.path),
-      namespace
     }));
-    build.onLoad({ filter: /.*/, namespace }, (args) => ({
+    build.onLoad({ filter: /.*/, namespace }, args => ({
       loader: "js",
-      contents: fs.readFileSync(args.path, "utf8")
+      contents: fs
+        .readFileSync(args.path, "utf8")
         .replace(/^(\s*)userMenuItem:.*$/m, "userMenuItem:[],")
-        .replace('www.baidu.com', 'https://github.com/luncheon/luckysheet-nightly'),
+        .replace("www.baidu.com", "https://github.com/luncheon/luckysheet-nightly"),
       resolveDir: path.dirname(args.path),
     }));
   },
 };
 
-esbuild.build({
+await esbuild.build({
   entryPoints: [resolve("luckysheet/src/index.js")],
-  outfile: resolve("dist/luckysheet-without-locales.iife.js"),
+  outfile: resolve("luckysheet-without-locales.iife.js"),
+  inject: [resolve("luckysheet/dist/plugins/js/plugin.js")],
+  external: ["jquery"],
   format: "iife",
   globalName: "luckysheet",
   bundle: true,
@@ -67,26 +70,66 @@ esbuild.build({
   plugins: [replaceLocalePlugin, replaceConfigPlugin],
 });
 
+await esbuild.build({
+  stdin: {
+    contents: `
+      @import "./luckysheet/dist/plugins/css/pluginsCss.css";
+      @import "./luckysheet/dist/plugins/plugins.css";
+      @import "./luckysheet/dist/css/luckysheet.css";
+      @import "./luckysheet/dist/assets/iconfont/iconfont.css";
+      @import "./luckysheet-locale-ja/styles.css";
+    `,
+    loader: "css",
+    resolveDir: resolve(),
+  },
+  outfile: resolve("luckysheet.css"),
+  bundle: true,
+  minify: true,
+  loader: {
+    ".png": "file",
+    ".gif": "file",
+    ".svg": "file",
+    ".ico": "file",
+    ".eot": "file",
+    ".ttf": "file",
+    ".woff": "file",
+    ".woff2": "file",
+  },
+  assetNames: "assets/[name]",
+});
+
+fs.mkdirSync(resolve("demo"), { recursive: true });
+
 // locales
-const index_html = fs.readFileSync(resolve("dist/index.html"), "utf8");
-const index_html_with_locale = (lang, localeSource, customize) => {
+const index_html = fs.readFileSync(resolve("luckysheet/dist/index.html"), "utf8");
+const index_html_with_locale = (lang, localeSource) => {
   const html = index_html
-    .replace(`<html>`, `<html lang="${lang}">`)
-    .replace(`<head lang='zh'>`, `<head>`)
-    .replace("luckysheet.umd.js", "luckysheet-without-locales.iife.js")
+    .replace(
+      /<html[\s\S]+<\/head>/m,
+      `
+<html lang="${lang}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Luckysheet</title>
+  <link rel="stylesheet" href="../luckysheet.css">
+  <script src="../luckysheet-without-locales.iife.js"></script>
+</head>
+`.trim()
+    )
     .replace(
       "<script>",
       `<script type="module">
-\t\timport locale_${lang} from './luckysheet-locale-${lang}.js';
+\t\timport locale_${lang} from '../locales/${lang}.js';
 \t\tluckysheet.locales.${lang} = locale_${lang};
-`
+`.trim()
     )
     .replace(/var lang =.+$/m, `var lang = '${lang}';`);
-  fs.writeFileSync(resolve(`dist/index_${lang}.html`), customize ? customize(html) : html, "utf8");
+  fs.writeFileSync(resolve(`demo/${lang}.html`), html, "utf8");
 
   esbuild.buildSync({
     entryPoints: [resolve(localeSource)],
-    outfile: resolve(`dist/luckysheet-locale-${lang}.js`),
+    outfile: resolve(`locales/${lang}.js`),
     format: "esm",
     minify: true,
   });
@@ -95,4 +138,4 @@ const index_html_with_locale = (lang, localeSource, customize) => {
 for (const lang of ["en", "es", "zh", "zh_tw"]) {
   index_html_with_locale(lang, `luckysheet/src/locale/${lang}.js`);
 }
-index_html_with_locale("ja", `luckysheet-locale-ja/index.js`, html => html.replace(/<script .+$/m, $0 => '<link rel="stylesheet" href="luckysheet-locale-ja.css" />\n\t' + $0));
+index_html_with_locale("ja", "luckysheet-locale-ja/index.js");

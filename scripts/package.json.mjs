@@ -6,6 +6,10 @@ import luckysheetPackage from "../luckysheet/package.json" assert { type: 'json'
 const __dirname = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const resolve = (...pathSegments) => path.join(__dirname, ...pathSegments);
 
-luckysheetPackage.name = 'luckysheet-nightly';
-luckysheetPackage.version = luckysheetPackage.version + '-' + new Date().toISOString().replace(/T.*/, '').replace(/-/g, '')
-fs.writeFileSync(resolve('package.json'), JSON.stringify(luckysheetPackage, undefined, 2), 'utf8')
+const thisPackage = {
+  name: 'luckysheet-nightly',
+  version: `${luckysheetPackage.version}-${new Date().toISOString().replace(/T.*/, '').replace(/-/g, '')}`,
+  main: 'luckysheet-without-locales.iife.js',
+}
+
+fs.writeFileSync(resolve('package.json'), JSON.stringify(thisPackage, undefined, 2), 'utf8')

@@ -26,13 +26,10 @@ jobs:
           node-version: 18
       - run: yarn --cwd luckysheet/
       - run: yarn --cwd luckysheet/ run build
-      - run: rm -rf dist/
-      - name: collect deliverables
-        run: |
-          mv luckysheet/dist/ .
-          mv luckysheet/LICENSE .
-          mv luckysheet-locale-ja/styles.css dist/luckysheet-locale-ja.css
+      - run: rm -rf assets/ demo/ locales/
       - run: node scripts/build-without-locales.mjs
+      - run: cp -r luckysheet/dist/demoData demo/
+      - run: cp luckysheet/LICENSE .
       - name: check changes
         run: echo "::set-output name=count::$(git status --porcelain | wc -l)"
         id: changes

@@ -2,8 +2,6 @@
   "files.watcherExclude": {
     "**/.*": true,
     "**/node_modules/": true,
-    "**/package-lock.json": true,
-    "**/dist/": true,
     "**/luckysheet/": true,
     "**/luckysheet-locale-ja/": true
   }
