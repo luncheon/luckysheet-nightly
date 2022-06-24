@@ -32,14 +32,14 @@ jobs:
           mv luckysheet/dist/ .
           mv luckysheet/LICENSE .
           mv luckysheet-locale-ja/styles.css dist/luckysheet-locale-ja.css
-      - run: node build-without-locales.mjs
+      - run: node scripts/build-without-locales.mjs
       - name: check changes
         run: echo "::set-output name=count::$(git status --porcelain | wc -l)"
         id: changes
       - name: push
         if: steps.changes.outputs.count > 0
         run: |
-          node package.json.js
+          node scripts/package.json.mjs
           git config --global user.name "luncheon"
           git config --global user.email "takeuck+github@gmail.com"
           git add .

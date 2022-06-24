@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import esbuild from "./luckysheet/node_modules/esbuild/lib/main.js";
-import luckysheetPackage from "./luckysheet/package.json" assert { type: 'json' };
+import esbuild from "../luckysheet/node_modules/esbuild/lib/main.js";
+import luckysheetPackage from "../luckysheet/package.json" assert { type: 'json' };
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const resolve = (...pathSegments) => path.join(__dirname, ...pathSegments);
 
 const banner = `/*! @preserve
