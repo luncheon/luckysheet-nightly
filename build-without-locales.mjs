@@ -50,7 +50,7 @@ esbuild.build({
 
 // locales
 const index_html = fs.readFileSync(resolve("dist/index.html"), "utf8");
-const index_html_with_locale = (lang, localeSource) => {
+const index_html_with_locale = (lang, localeSource, customize) => {
   const html = index_html
     .replace(`<html>`, `<html lang="${lang}">`)
     .replace(`<head lang='zh'>`, `<head>`)
@@ -63,7 +63,7 @@ const index_html_with_locale = (lang, localeSource) => {
 `
     )
     .replace(/var lang =.+$/m, `var lang = '${lang}';`);
-  fs.writeFileSync(resolve(`dist/index_${lang}.html`), html, "utf8");
+  fs.writeFileSync(resolve(`dist/index_${lang}.html`), customize ? customize(html) : html, "utf8");
 
   esbuild.buildSync({
     entryPoints: [resolve(localeSource)],
@@ -76,4 +76,4 @@ const index_html_with_locale = (lang, localeSource) => {
 for (const lang of ["en", "es", "zh", "zh_tw"]) {
   index_html_with_locale(lang, `luckysheet/src/locale/${lang}.js`);
 }
-index_html_with_locale("ja", `luckysheet-locale-ja/index.js`);
+index_html_with_locale("ja", `luckysheet-locale-ja/index.js`, html => html.replace(/<script .+$/m, $0 => '<link rel="stylesheet" href="luckysheet-locale-ja.css" />\n\t' + $0));

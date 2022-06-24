@@ -31,6 +31,7 @@ jobs:
         run: |
           mv luckysheet/dist/ .
           mv luckysheet/LICENSE .
+          mv luckysheet-locale-ja/styles.css dist/luckysheet-locale-ja.css
       - run: node build-without-locales.mjs
       - name: check changes
         run: echo "::set-output name=count::$(git status --porcelain | wc -l)"
