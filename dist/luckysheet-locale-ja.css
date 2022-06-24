@@ -1,0 +1,51 @@
+/* toolbar > more button : prevent overlapping with other buttons */
+#luckysheet-wa-editor {
+  display: flex;
+}
+#luckysheet-wa-editor > .luckysheet-toolbar-button {
+  margin-right: 0;
+}
+:not(.luckysheet-toolbar-separator) + #luckysheet-icon-morebtn {
+  margin-left: 4px;
+}
+:not(.luckysheet-toolbar-separator) + #luckysheet-icon-morebtn::before {
+  content: '';
+  position: relative;
+  display: inline-block;
+  right: 5px;
+  top: 2px;
+  height: 20px;
+  border-left: 1px solid #e0e0e0;
+}
+#luckysheet-wa-editor > #luckysheet-icon-morebtn {
+  position: static;
+  transform: none;
+}
+
+/* toolbar > dropdown menus : adjust item width */
+.luckysheet-cols-menu {
+  width: auto !important;
+}
+.luckysheet-cols-menu > .luckysheet-cols-menuitem.luckysheet-mousedown-cancel {
+  padding-right: 8px;
+}
+.luckysheet-cols-menuitem-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.luckysheet-cols-menuitem-content > :last-child {
+  flex: auto;
+}
+.luckysheet-cols-menuitem-content > .luckysheet-submenu-arrow {
+  position: static;
+}
+.luckysheet-cols-menuitem-content > .luckysheet-submenu-arrow > .luckysheet-icon {
+  height: max-content;
+}
+
+/* toolbar > borders menu > border size : adjust preview (underline) position */
+#luckysheetborderSizepreview {
+  left: 25px;
+  right: auto !important;
+}
