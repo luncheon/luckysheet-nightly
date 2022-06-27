@@ -7,6 +7,13 @@ import luckysheetPackage from "../luckysheet/package.json" assert { type: "json"
 const __dirname = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const resolve = (...pathSegments) => path.join(__dirname, ...pathSegments);
 
+fs.rmSync(resolve("assets"), { force: true, recursive: true });
+fs.rmSync(resolve("demo"), { force: true, recursive: true });
+fs.rmSync(resolve("locales"), { force: true, recursive: true });
+
+fs.cpSync(resolve("luckysheet/dist/demoData"), resolve("demo/demoData"), { recursive: true,  });
+fs.cpSync(resolve("luckysheet/dist/expendPlugins"), resolve("demo/expendPlugins"), { recursive: true });
+
 const banner = `/*! @preserve
  * ${luckysheetPackage.name}
  * version: ${luckysheetPackage.version}
@@ -77,10 +84,11 @@ await esbuild
 await esbuild.build({
   stdin: {
     contents: `
-      @import "./luckysheet/dist/plugins/css/pluginsCss.css";
+      /* @import "./luckysheet/dist/plugins/css/pluginsCss.css"; */
+      @import "./luckysheet/dist/assets/iconfont/iconfont.css";
+      @import "./luckysheet/src/plugins/css/spectrum.min.css";
       @import "./luckysheet/dist/plugins/plugins.css";
       @import "./luckysheet/dist/css/luckysheet.css";
-      @import "./luckysheet/dist/assets/iconfont/iconfont.css";
       @import "./luckysheet-locale-ja/styles.css";
     `,
     loader: "css",
