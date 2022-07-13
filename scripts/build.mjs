@@ -84,9 +84,11 @@ const replaceCorePlugin = {
       contents: 
       `
 import hyperlinkCtrl from './controllers/hyperlinkCtrl';
+import luckysheetFreezen from './controllers/freezen';
 ${fs.readFileSync(args.path, "utf8")}
 luckysheet.store = Store;
-luckysheet.hyperlinkCtrl = hyperlinkCtrl;
+luckysheet.hyperlinkController = hyperlinkCtrl;
+luckysheet.freezeController = luckysheetFreezen;
 `,
       resolveDir: path.dirname(args.path),
     }));
