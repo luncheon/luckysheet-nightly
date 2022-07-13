@@ -20,13 +20,10 @@ const banner = `/*! @preserve
  * https://github.com/mengshukeji/Luckysheet
  */`;
 
-const localeJs = `
-import Store from '../store';
-export const locales = {};
-export default () => locales[Store.lang];
-`;
-
-/** @type esbuild.Plugin */
+/**
+ * do not bundle huge locale resources
+ * @type esbuild.Plugin
+ */
 const replaceLocalePlugin = {
   name: "replace-locale",
   setup(build) {
@@ -37,13 +34,20 @@ const replaceLocalePlugin = {
     }));
     build.onLoad({ filter: /.*/, namespace }, args => ({
       loader: "js",
-      contents: localeJs,
+      contents: `
+import Store from '../store';
+export const locales = {};
+export default () => locales[Store.lang];
+`,
       resolveDir: path.dirname(args.path),
     }));
   },
 };
 
-/** @type esbuild.Plugin */
+/**
+ * erase `"www.baidu.com"`
+ * @type esbuild.Plugin
+ */
 const replaceConfigPlugin = {
   name: "replace-config",
   setup(build) {
@@ -63,6 +67,26 @@ const replaceConfigPlugin = {
   },
 };
 
+/**
+ * exports `Store`
+ * @type esbuild.Plugin
+ */
+const replaceCorePlugin = {
+  name: "replace-core",
+  setup(build) {
+    const namespace = "replace-core";
+    build.onResolve({ filter: /^\.\/core$/ }, args => ({
+      namespace,
+      path: path.resolve(args.resolveDir, args.path + ".js"),
+    }));
+    build.onLoad({ filter: /.*/, namespace }, args => ({
+      loader: "js",
+      contents: fs.readFileSync(args.path, "utf8") + "\nluckysheet.store = Store;",
+      resolveDir: path.dirname(args.path),
+    }));
+  },
+};
+
 await esbuild
   .build({
     entryPoints: [resolve("luckysheet/src/index.js")],
@@ -73,7 +97,7 @@ await esbuild
     minify: true,
     banner: { js: banner },
     target: "es2020",
-    plugins: [replaceLocalePlugin, replaceConfigPlugin],
+    plugins: [replaceLocalePlugin, replaceConfigPlugin, replaceCorePlugin],
     write: false,
   })
   .then(result => {
