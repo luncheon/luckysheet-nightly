@@ -68,7 +68,7 @@ const replaceConfigPlugin = {
 };
 
 /**
- * exports `Store`
+ * exports `Store`, `hyperlinkCtrl`
  * @type esbuild.Plugin
  */
 const replaceCorePlugin = {
@@ -81,7 +81,13 @@ const replaceCorePlugin = {
     }));
     build.onLoad({ filter: /.*/, namespace }, args => ({
       loader: "js",
-      contents: fs.readFileSync(args.path, "utf8") + "\nluckysheet.store = Store;",
+      contents: 
+      `
+import hyperlinkCtrl from './controllers/hyperlinkCtrl';
+${fs.readFileSync(args.path, "utf8")}
+luckysheet.store = Store;
+luckysheet.hyperlinkCtrl = hyperlinkCtrl;
+`,
       resolveDir: path.dirname(args.path),
     }));
   },
