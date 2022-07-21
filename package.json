@@ -1,5 +1,5 @@
 {
   "name": "luckysheet-nightly",
-  "version": "2.1.13-20220715",
+  "version": "2.1.13-20220721",
   "main": "luckysheet-without-locales.iife.js"
 }
