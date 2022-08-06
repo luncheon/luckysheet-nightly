@@ -11,7 +11,7 @@ fs.rmSync(resolve("assets"), { force: true, recursive: true });
 fs.rmSync(resolve("demo"), { force: true, recursive: true });
 fs.rmSync(resolve("locales"), { force: true, recursive: true });
 
-fs.cpSync(resolve("luckysheet/dist/demoData"), resolve("demo/demoData"), { recursive: true,  });
+fs.cpSync(resolve("luckysheet/dist/demoData"), resolve("demo/demoData"), { recursive: true });
 fs.cpSync(resolve("luckysheet/dist/expendPlugins"), resolve("demo/expendPlugins"), { recursive: true });
 
 const banner = `/*! @preserve
@@ -21,68 +21,14 @@ const banner = `/*! @preserve
  */`;
 
 /**
- * do not bundle huge locale resources
  * @type esbuild.Plugin
  */
-const replaceLocalePlugin = {
-  name: "replace-locale",
+const myPlugin = {
+  name: "my-plugin",
   setup(build) {
-    const namespace = "replace-locale";
-    build.onResolve({ filter: /\/locale\/locale$/ }, args => ({
-      namespace,
-      path: path.resolve(args.resolveDir, args.path + ".js"),
-    }));
-    build.onLoad({ filter: /.*/, namespace }, args => ({
-      loader: "js",
+    // exports `Store`, `hyperlinkCtrl` as `hyperlinkController`, `freezen` as `freezeController`
+    build.onLoad({ filter: /\/src\/core\.js$/ }, args => ({
       contents: `
-import Store from '../store';
-export const locales = {};
-export default () => locales[Store.lang];
-`,
-      resolveDir: path.dirname(args.path),
-    }));
-  },
-};
-
-/**
- * erase `"www.baidu.com"`
- * @type esbuild.Plugin
- */
-const replaceConfigPlugin = {
-  name: "replace-config",
-  setup(build) {
-    const namespace = "replace-config";
-    build.onResolve({ filter: /\/config\.js$/ }, args => ({
-      namespace,
-      path: path.resolve(args.resolveDir, args.path),
-    }));
-    build.onLoad({ filter: /.*/, namespace }, args => ({
-      loader: "js",
-      contents: fs
-        .readFileSync(args.path, "utf8")
-        .replace(/^(\s*)userMenuItem:.*$/m, "userMenuItem:[],")
-        .replace("www.baidu.com", "https://github.com/luncheon/luckysheet-nightly"),
-      resolveDir: path.dirname(args.path),
-    }));
-  },
-};
-
-/**
- * exports `Store`, `hyperlinkCtrl`
- * @type esbuild.Plugin
- */
-const replaceCorePlugin = {
-  name: "replace-core",
-  setup(build) {
-    const namespace = "replace-core";
-    build.onResolve({ filter: /^\.\/core$/ }, args => ({
-      namespace,
-      path: path.resolve(args.resolveDir, args.path + ".js"),
-    }));
-    build.onLoad({ filter: /.*/, namespace }, args => ({
-      loader: "js",
-      contents: 
-      `
 import hyperlinkCtrl from './controllers/hyperlinkCtrl';
 import luckysheetFreezen from './controllers/freezen';
 ${fs.readFileSync(args.path, "utf8")}
@@ -90,7 +36,28 @@ luckysheet.store = Store;
 luckysheet.hyperlinkController = hyperlinkCtrl;
 luckysheet.freezeController = luckysheetFreezen;
 `,
-      resolveDir: path.dirname(args.path),
+    }));
+
+    // erase `"www.baidu.com"`
+    build.onLoad({ filter: /\/src\/config\.js$/ }, args => ({
+      contents: fs
+        .readFileSync(args.path, "utf8")
+        .replace(/^(\s*)userMenuItem:.*$/m, "userMenuItem:[],")
+        .replace("www.baidu.com", "https://github.com/luncheon/luckysheet-nightly"),
+    }));
+
+    // do not bundle huge locale resources
+    build.onLoad({ filter: /\/src\/locale\/locale\.js$/ }, () => ({
+      contents: `
+import Store from '../store';
+export const locales = {};
+export default () => locales[Store.lang];
+`,
+    }));
+
+    // delete html template indents
+    build.onLoad({ filter: /\/src\/controllers\/[^/]+\.js$/ }, args => ({
+      contents: fs.readFileSync(args.path, "utf8").replace(/^\s*/gm, ""),
     }));
   },
 };
@@ -105,7 +72,7 @@ await esbuild
     minify: true,
     banner: { js: banner },
     target: "es2020",
-    plugins: [replaceLocalePlugin, replaceConfigPlugin, replaceCorePlugin],
+    plugins: [myPlugin],
     write: false,
   })
   .then(result => {
