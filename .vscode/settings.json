@@ -4,5 +4,8 @@
     "**/node_modules/": true,
     "**/luckysheet/": true,
     "**/luckysheet-locale-ja/": true
-  }
+  },
+  "cSpell.words": [
+    "luckysheet"
+  ]
 }
