@@ -14,7 +14,7 @@ jobs:
       - name: checkout luckysheet
         uses: actions/checkout@v3
         with:
-          repository: mengshukeji/Luckysheet
+          repository: dream-num/Luckysheet
           path: luckysheet
       - name: checkout luckysheet-locale-ja
         uses: actions/checkout@v3
